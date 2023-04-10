@@ -1,0 +1,17 @@
+{
+  "model_name": "PointNetAutoEncoder",
+  "dataset": "lj_samples.npy",
+  "repeat_size": 8,
+  "batch_size": 100,
+  "cloud_size": 19,
+  "latent_dim": 4,
+  "epochs": 5000,
+  "learning_rate": 0.001,
+  "l2_weight": 0.0,
+  "closs_weight": 0.001,
+  "oloss_weight": 0.001,
+  "rloss_weight": 0.1,
+  "wloss_weight": 1.0,
+  "dimen_size": 3,
+  "radius": 0.5
+}
