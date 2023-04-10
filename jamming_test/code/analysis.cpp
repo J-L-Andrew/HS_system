@@ -33,13 +33,13 @@ Point p[10000];
 // ofstream kd("fit.txt");
 
 int main() {
-  string head = "../datanew/sample";
+  string head = "/mnt/Edisk/andrew/dataset/LS/new/sample";
   string file;
 
   // ofstream sum("./sum.txt");
   // sum << "PD\tG\tR^2" << endl;
 
-  for (int i = 987; i <= 987; ++i) {
+  for (int i = 1320; i <= 1320; ++i) {
     double para[3];
     string index;
     stringstream trans;
@@ -60,7 +60,7 @@ int main() {
       // sum << PD << "\t" << para[0] << "\t" << para[1] << endl;
       BackGroundGrids();
 
-      double Q6 = CalculateQ6();
+      double Q6 = CalculateQ6_local();
       cout << Q6 << endl;
       POV_superball(path + "/config.pov");
       XYZ_output(path + "/config.xyz");
@@ -233,14 +233,10 @@ void sort_dis(int id, int index) {
   int markn = -1;
   for (int i = 0; i < NUM_PARTICLE; i++) {
     bool flag = 0;
-    if (i == id)
-      flag = 1;
-    else {
-      for (int j = 0; j < index; j++) {
-        if (i == neigh_id[id][j]) {
-          flag = 1;
-          break;
-        }
+    for (int j = 0; j < index; j++) {
+      if (i == neigh_id[id][j]) {
+        flag = 1;
+        break;
       }
     }
 
@@ -255,37 +251,26 @@ void sort_dis(int id, int index) {
 }
 
 void Nearest_neighbor() {
-  int i, j, *ncn;
-  CNode *pn0, *pn1;
-  CSuperball *ps0, *ps1;
-
-  for (int t = 0; t < NNN; t++) {
-    for (int m = 0; m < 14; m++) {
-      i = MASK3D[m][0], j = MASK3D[m][1];
-      for (pn0 = blocks[t]->head[i]; pn0 != NULL; pn0 = pn0->next) {
-        ps0 = pn0->ps;
-        if (pn0->PBC != NULL) {
-          psp[0]->Copyfrom(ps0);
-          psp[0]->Jump(pn0->PBC);
-          ps0 = psp[0];
-        }
-
-        for ((j == 0) ? (pn1 = pn0->next) : (pn1 = blocks[t]->head[j]);
-             pn1 != NULL; pn1 = pn1->next) {
-          ps1 = pn1->ps;
-          if (pn1->PBC != NULL) {
-            psp[1]->Copyfrom(ps1);
-            psp[1]->Jump(pn1->PBC);
-            ps1 = psp[1];
+  for (int i = 0; i < NUM_PARTICLE; i++) {
+    pair_dis[i][i] = INFINITY;
+    for (int j = i + 1; j < NUM_PARTICLE; j++) {
+      Vector<3> vtemp = particles[j]->center - particles[i]->center;
+      double dmin = INFINITY;
+      Vector<3> vmin;
+      for (int ii = -1; ii < 2; ii++)
+        for (int jj = -1; jj < 2; jj++)
+          for (int kk = -1; kk < 2; kk++) {
+            Vector<3> PBC = {double(ii), double(jj), double(kk)};
+            PBC = Lambda * PBC;
+            double d = (vtemp + PBC).Norm();
+            if (d < dmin) {
+              dmin = d;
+              vmin = vtemp + PBC;
+            }
           }
-          Vector<3> vtemp = ps1->center - ps0->center;
-
-          pair_dis[pn0->ps->ID][pn1->ps->ID] =
-              pair_dis[pn1->ps->ID][pn0->ps->ID] = vtemp.Norm();
-          pair_dv[pn0->ps->ID][pn1->ps->ID] = vtemp;
-          pair_dv[pn1->ps->ID][pn0->ps->ID] = -vtemp;
-        }
-      }
+      pair_dis[i][j] = pair_dis[j][i] = dmin;
+      pair_dv[i][j] = vmin;
+      pair_dv[j][i] = -vmin;
     }
   }
 
@@ -293,6 +278,52 @@ void Nearest_neighbor() {
     for (int n = 0; n < Maxlocal; n++) sort_dis(m, n);
   }
 }
+
+// void Nearest_neighbor() {
+//   int i, j, *ncn;
+//   CNode *pn0, *pn1;
+//   CSuperball *ps0, *ps1;
+
+//   for (int m = 0; m < NUM_PARTICLE; m++) {
+//     for (int n = m; n < NUM_PARTICLE; n++) {
+//       pair_dis[m][n] = pair_dis[n][m] = INFINITY;
+//     }
+//   }
+
+//   for (int t = 0; t < NNN; t++) {
+//     for (int m = 0; m < 14; m++) {
+//       i = MASK3D[m][0], j = MASK3D[m][1];
+//       for (pn0 = blocks[t]->head[i]; pn0 != NULL; pn0 = pn0->next) {
+//         ps0 = pn0->ps;
+//         if (pn0->PBC != NULL) {
+//           psp[0]->Copyfrom(ps0);
+//           psp[0]->Jump(pn0->PBC);
+//           ps0 = psp[0];
+//         }
+
+//         for ((j == 0) ? (pn1 = pn0->next) : (pn1 = blocks[t]->head[j]);
+//              pn1 != NULL; pn1 = pn1->next) {
+//           ps1 = pn1->ps;
+//           if (pn1->PBC != NULL) {
+//             psp[1]->Copyfrom(ps1);
+//             psp[1]->Jump(pn1->PBC);
+//             ps1 = psp[1];
+//           }
+//           Vector<3> vtemp = ps1->center - ps0->center;
+
+//           pair_dis[pn0->ps->ID][pn1->ps->ID] =
+//               pair_dis[pn1->ps->ID][pn0->ps->ID] = vtemp.Norm();
+//           pair_dv[pn0->ps->ID][pn1->ps->ID] = vtemp;
+//           pair_dv[pn1->ps->ID][pn0->ps->ID] = -vtemp;
+//         }
+//       }
+//     }
+//   }
+
+//   for (int m = 0; m < NUM_PARTICLE; m++) {
+//     for (int n = 0; n < Maxlocal; n++) sort_dis(m, n);
+//   }
+// }
 
 double GetCN(int N) {
   // Here for hard particle
@@ -348,7 +379,6 @@ double GetCN(int N) {
 }
 double CalculateQ6() {
   Nearest_neighbor();
-  cout << "HZH" << endl;
 
   int Nb = Maxlocal;
   double cita, fai, Y6 = 0.0;
@@ -362,9 +392,7 @@ double CalculateQ6() {
   for (int i = 0; i < NUM_PARTICLE; i++) {
     for (int j = 0; j < Maxlocal; j++) {
       int m = neigh_id[i][j];
-
       Vector<3> vtemp = pair_dv[i][m];
-      //cout<<vtemp.Norm()<<endl;
 
       cita = acos(vtemp[2] / vtemp.Norm());
       double tmp1 = cos(cita);
@@ -432,15 +460,109 @@ double CalculateQ6() {
   }
 
   for (int s = 0; s < 13; s++) {
-    YAT6[s] /= double(Nb);
-    YBT6[s] /= double(Nb);
+    YAT6[s] /= double(Nb * NUM_PARTICLE);
+    YBT6[s] /= double(Nb * NUM_PARTICLE);
   }
 
-  for (int u = 0; u < 13; u++) YT6[u] = YAT6[u] * YAT6[u] + YBT6[u] * YBT6[u];
-  for (int v = 0; v < 13; v++) Y6 += YT6[v];
+  for (int u = 0; u < 13; u++) {
+    YT6[u] = YAT6[u] * YAT6[u] + YBT6[u] * YBT6[u];
+    Y6 += YT6[u];
+  }
 
-  return sqrt(4 * PI * Y6 / 13);
+  return sqrt(4.0 * PI * Y6 / 13.0);
 }
+
+double CalculateQ6_local() {
+  Nearest_neighbor();
+
+  int Nb = Maxlocal;
+  double cita, fai, Y6 = 0.0;
+  double YA6[13], YB6[13], YAT6[13], YBT6[13],
+      YT6[13];  // Y6[-6]到Y6[6]变为Y6[0]到Y6[12], Y6=YA6+YB6*i ,即y=a+bi;
+
+  for (int i = 0; i < NUM_PARTICLE; i++) {
+    for (int q = 0; q < 13; q++) {
+      YA6[q] = YB6[q] = YAT6[q] = YBT6[q] = YT6[q] = 0.0;
+    }
+
+    for (int j = 0; j < Maxlocal; j++) {
+      int m = neigh_id[i][j];
+      Vector<3> vtemp = pair_dv[i][m];
+
+      cita = acos(vtemp[2] / vtemp.Norm());
+      double tmp1 = cos(cita);
+      double tmp2 = sin(cita);
+      fai = atan2(vtemp[1], vtemp[0]);
+
+      YA6[0] = cos(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
+      YB6[0] = -sin(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
+      YA6[1] = 3 * cos(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
+      YB6[1] = -3 * sin(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
+      YA6[2] = 3 * cos(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
+               sqrt(91 / PI / 2) / 32;
+      YB6[2] = -3 * sin(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
+               sqrt(91 / PI / 2) / 32;
+      YA6[3] = cos(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
+               sqrt(1365 / PI) / 32;
+      YB6[3] = -sin(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
+               sqrt(1365 / PI) / 32;
+      YA6[4] = cos(2 * fai) * pow(tmp2, 2) *
+               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
+               64;
+      YB6[4] = -sin(2 * fai) * pow(tmp2, 2) *
+               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
+               64;
+      YA6[5] = cos(fai) * tmp2 *
+               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
+               sqrt(273 / PI / 2) / 16;
+      YB6[5] = -sin(fai) * tmp2 *
+               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
+               sqrt(273 / PI / 2) / 16;
+      YA6[6] =
+          (231 * pow(tmp1, 6) - 315 * pow(tmp1, 4) + 105 * pow(tmp1, 2) - 5) *
+          sqrt(13 / PI) / 32;
+      YB6[6] = 0;
+      YA6[7] = -cos(fai) * tmp2 *
+               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
+               sqrt(273 / 2 / PI) / 16;
+      YB6[7] = -sin(fai) * tmp2 *
+               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
+               sqrt(273 / 2 / PI) / 16;
+      YA6[8] = cos(2 * fai) * pow(tmp2, 2) *
+               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
+               64;
+      YB6[8] = sin(2 * fai) * pow(tmp2, 2) *
+               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
+               64;
+      YA6[9] = -cos(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
+               sqrt(1365 / PI) / 32;
+      YB6[9] = -sin(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
+               sqrt(1365 / PI) / 32;
+      YA6[10] = 3 * cos(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
+                sqrt(91 / PI / 2) / 32;
+      YB6[10] = 3 * sin(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
+                sqrt(91 / PI / 2) / 32;
+      YA6[11] = -3 * cos(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
+      YB6[11] = -3 * sin(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
+      YA6[12] = cos(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
+      YB6[12] = sin(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
+
+      for (int t = 0; t < 13; t++) {
+        YAT6[t] += YA6[t];
+        YBT6[t] += YB6[t];
+      }
+    }
+
+    for (int u = 0; u < 13; u++)
+      YT6[u] = (YAT6[u] * YAT6[u] + YBT6[u] * YBT6[u]) / pow(Nb, 2.0);
+    double temp = 0.0;
+    for (int u = 0; u < 13; u++) temp += YT6[u];
+    Y6 += sqrt(4.0 * PI * temp / 13.0);
+  }
+
+  return Y6 / double(NUM_PARTICLE);
+}
+
 // double CalculateQ6_rcut() {
 //   int i, j;
 //   CNode *pn0, *pn1;

@@ -43,6 +43,7 @@ void XYZ_output(string filename);
 
 double GetCN(int N);
 double CalculateQ6();
+double CalculateQ6_local();
 
 
 
