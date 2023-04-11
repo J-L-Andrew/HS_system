@@ -66,6 +66,9 @@ Mechanical Characterization of Partially Crystallized Sphere Packings里的Zg和
 
 ![fdf5a6e9f9cf44c92598f523eb6ac87](https://user-images.githubusercontent.com/72123149/230900217-8be238a0-69dc-4814-a522-3c8e474514eb.png)
 
+Zg的计算：
+![b5706419ee24e9a3f0c42807afc1f97](https://user-images.githubusercontent.com/72123149/231064797-fb0620bc-3d2d-4760-9ce7-05588800eeb9.png)
+
 
 ### 力链分析
 ![80a31c54bba1991490be728e0ba7d69](https://user-images.githubusercontent.com/72123149/230898497-cd2f7fa8-c3a7-4a9e-92c7-51c1cabb5c57.png)
