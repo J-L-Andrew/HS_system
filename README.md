@@ -1,39 +1,33 @@
-每个压缩率下算200个样本
-# 规模：1000个颗粒
+# The mechanical properties of monodisperse hard-sphere system
 
-**制备0.64附近：
-1. 从0.1到0.6几全程快速压缩，抑制结晶
-2. 最后缓慢压缩确保jam
-1e-2    done
-5e-3    done
-1e-3    done
+### Simulation details
+Hard-sphere packing generation with [the Lubachevsky–Stillinger (LS) algorithm](https://cims.nyu.edu/~donev/Packing/C++/index.html).
+We set N=500, and change the expansion rate of particles to obtain many packing samples.
+每个压缩率下算300个样本
+可以参照https://pubs.rsc.org/en/content/articlepdf/2014/sm/c3sm52959b来写
 
-制备0.65-0.7之间：
-1. 先从0.1到0.4快速压缩
-2. 然后全程缓慢压缩直到结束
-5e-4    done
-1e-4    done
-5e-5    done
-1e-5    done
-5e-6
-1e-6
+面临的问题：0.7以上少，考虑引入defect？ 
 
-# 规模：4N^3: 864
+另：对rattler问题要有交代，至少是collectively jammed。
 
-制备0.7-0.74之间：
-1. 先从0.1到0.4快速压缩
-2. 然后全程缓慢压缩直到结束
-5e-4    done
-1e-4    done
-5e-5    done
-1e-5    done
-5e-6
-1e-6
+Although these packings are obtained under different conditions, structural analysis suggests that these samples are
+consistent with each other for a given ρ ------ On the relationships between structural properties and packing density
+of uniform spheres
 
-引入defect
-集合
+Nevertheless, the LS compression protocol is an
+excellent tool to approach the jamming point: Besides being
+fast, it has been amply verified that it closely reproduces
+the (phenomenological) equation of state ------ Hard-sphere jamming through the lens of linear optimization
 
-### 对rattler问题要有交代，至少是collectively jammed
+
+DEM涉及到软球；
+体积模量（B）关注的比较少，可以直接算出来
+软球
+lammps去掉friction
+或LS生成初始结构，压缩使得所有颗粒重叠，再能量最小化
+
+思路：压强与order双向增加PD，
+bcc用pathy model，到Corey主页搜K. Zhang，
 
 ### Q6
 ![0cc3bed9e61d25023982eb57a587083](https://user-images.githubusercontent.com/72123149/230899166-92151b09-d185-4297-b127-9d9792b6804f.png)

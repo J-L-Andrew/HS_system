@@ -416,94 +416,142 @@ double GetCN(int N) {
   delete[] ncn;
   return meancn;
 }
+
+complex<double> SphericalHarmonic(double theta, double phi, int l, int m) {
+  // https://github.com/VasiliBaranov/packing-generation/blob/master/PackingGeneration/Core/Headers/SphericalHarmonicsComputer.h
+  complex<double> i = complex<double>(0, 1);
+
+  if (l == 0) {
+    return 1.0 / 2.0 * sqrt(1.0 / PI) * complex<double>(1.0, 0.0);
+  }
+
+  if (l == 1) {
+    if (m == -1) {
+      return 1.0 / 2.0 * sqrt(3.0 / 2.0 / PI) *
+             complex<double>(cos(-phi), sin(-phi)) * sin(theta);
+    }
+
+    if (m == 0) {
+      return 1.0 / 2.0 * sqrt(3.0 / PI) * cos(theta);
+    }
+
+    if (m == 1) {
+      return 1.0 / 2.0 * sqrt(3.0 / 2.0 / PI) *
+             complex<double>(cos(phi), sin(phi)) * sin(theta);
+    }
+  }
+
+  if (l == 4) {
+    double sinTheta = sin(theta);
+    double cosTheta = cos(theta);
+
+    if (m == -4) {
+      return (1.0 / 64.0) * sqrt(3003.0 / PI) * exp(-4.0 * i * phi) *
+             pow(sinTheta, 4);
+    }
+  }
+
+  if (l == 6) {
+    double sinTheta = sin(theta);
+    double cosTheta = cos(theta);
+
+    if (m == -6) {
+      return (1.0 / 64.0) * sqrt(3003.0 / PI) * exp(-6.0 * i * phi) *
+             pow(sinTheta, 6);
+    }
+
+    if (m == -5) {
+      return (3.0 / 32.0) * sqrt(1001.0 / PI) * exp(-5.0 * i * phi) *
+             pow(sinTheta, 5) * cosTheta;
+    }
+
+    if (m == -4) {
+      return (3.0 / 32.0) * sqrt(91.0 / 2.0 / PI) * exp(-4.0 * i * phi) *
+             pow(sinTheta, 4) * (11.0 * pow(cosTheta, 2) - 1.0);
+    }
+
+    if (m == -3) {
+      return (1.0 / 32.0) * sqrt(1365.0 / PI) * exp(-3.0 * i * phi) *
+             pow(sinTheta, 3) * (11.0 * pow(cosTheta, 3) - 3.0 * cosTheta);
+    }
+
+    if (m == -2) {
+      return (1.0 / 64.0) * sqrt(1365.0 / PI) * exp(-2.0 * i * phi) *
+             pow(sinTheta, 2) *
+             (33.0 * pow(cosTheta, 4) - 18.0 * pow(cosTheta, 2) + 1.0);
+    }
+
+    if (m == -1) {
+      return (1.0 / 16.0) * sqrt(273.0 / 2.0 / PI) * exp(-i * phi) * sinTheta *
+             (33.0 * pow(cosTheta, 5) - 30.0 * pow(cosTheta, 3) +
+              5.0 * cosTheta);
+    }
+
+    if (m == 0) {
+      return (1.0 / 32.0) * sqrt(13.0 / PI) *
+             (231.0 * pow(cosTheta, 6) - 315.0 * pow(cosTheta, 4) +
+              105.0 * pow(cosTheta, 2) - 5.0);
+    }
+
+    if (m == 1) {
+      return (-1.0 / 16.0) * sqrt(273.0 / 2.0 / PI) * exp(i * phi) * sinTheta *
+             (33.0 * pow(cosTheta, 5) - 30.0 * pow(cosTheta, 3) +
+              5.0 * cosTheta);
+    }
+
+    if (m == 2) {
+      return (1.0 / 64.0) * sqrt(1365.0 / PI) * exp(2.0 * i * phi) *
+             pow(sinTheta, 2) *
+             (33.0 * pow(cosTheta, 4) - 18.0 * pow(cosTheta, 2) + 1.0);
+    }
+
+    if (m == 3) {
+      return (-1.0 / 32.0) * sqrt(1365.0 / PI) * exp(3.0 * i * phi) *
+             pow(sinTheta, 3) * (11.0 * pow(cosTheta, 3) - 3.0 * cosTheta);
+    }
+
+    if (m == 4) {
+      return (3.0 / 32.0) * sqrt(91.0 / 2.0 / PI) * exp(4.0 * i * phi) *
+             pow(sinTheta, 4) * (11.0 * pow(cosTheta, 2) - 1.0);
+    }
+
+    if (m == 5) {
+      return (-3.0 / 32.0) * sqrt(1001.0 / PI) * exp(5.0 * i * phi) *
+             pow(sinTheta, 5) * cosTheta;
+    }
+
+    if (m == 6) {
+      return (1.0 / 64.0) * sqrt(3003.0 / PI) * exp(6.0 * i * phi) *
+             pow(sinTheta, 6);
+    }
+  }
+}
+
 double CalculateQ6() {
   int Nb = Maxlocal;
-  double cita, fai, Y6 = 0.0;
-  double YA6[13], YB6[13], YAT6[13], YBT6[13],
-      YT6[13];  // Y6[-6]到Y6[6]变为Y6[0]到Y6[12], Y6=YA6+YB6*i ,即y=a+bi;
+  double Y6 = 0.0;
+  complex<double> Y_cum[13];  // cumulative
 
-  for (int q = 0; q < 13; q++) {
-    YA6[q] = YB6[q] = YAT6[q] = YBT6[q] = YT6[q] = 0.0;
-  }
+  for (int q = 0; q < 13; q++) Y_cum[q] = complex<double>(0, 0);
 
   for (int i = 0; i < NUM_PARTICLE; i++) {
     for (int j = 0; j < Maxlocal; j++) {
       int m = neigh_id[i][j];
       Vector<3> vtemp = pair_dv[i][m];
 
-      cita = acos(vtemp[2] / vtemp.Norm());
-      double tmp1 = cos(cita);
-      double tmp2 = sin(cita);
-      fai = atan2(vtemp[1], vtemp[0]);
+      double theta = acos(vtemp[2] / vtemp.Norm());
+      double phi = atan2(vtemp[1], vtemp[0]);
 
-      YA6[0] = cos(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-      YB6[0] = -sin(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-      YA6[1] = 3 * cos(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YB6[1] = -3 * sin(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YA6[2] = 3 * cos(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-               sqrt(91 / PI / 2) / 32;
-      YB6[2] = -3 * sin(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-               sqrt(91 / PI / 2) / 32;
-      YA6[3] = cos(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YB6[3] = -sin(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YA6[4] = cos(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YB6[4] = -sin(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YA6[5] = cos(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / PI / 2) / 16;
-      YB6[5] = -sin(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / PI / 2) / 16;
-      YA6[6] =
-          (231 * pow(tmp1, 6) - 315 * pow(tmp1, 4) + 105 * pow(tmp1, 2) - 5) *
-          sqrt(13 / PI) / 32;
-      YB6[6] = 0;
-      YA6[7] = -cos(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / 2 / PI) / 16;
-      YB6[7] = -sin(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / 2 / PI) / 16;
-      YA6[8] = cos(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YB6[8] = sin(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YA6[9] = -cos(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YB6[9] = -sin(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YA6[10] = 3 * cos(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-                sqrt(91 / PI / 2) / 32;
-      YB6[10] = 3 * sin(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-                sqrt(91 / PI / 2) / 32;
-      YA6[11] = -3 * cos(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YB6[11] = -3 * sin(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YA6[12] = cos(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-      YB6[12] = sin(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-
-      for (int t = 0; t < 13; t++) {
-        YAT6[t] += YA6[t];
-        YBT6[t] += YB6[t];
+      for (int m = -6; m < 6; m++) {
+        complex<double> y = SphericalHarmonic(theta, phi, 6, m);
+        Y_cum[m + 6] += y / double(Nb * NUM_PARTICLE);
       }
     }
   }
 
-  for (int s = 0; s < 13; s++) {
-    YAT6[s] /= double(Nb * NUM_PARTICLE);
-    YBT6[s] /= double(Nb * NUM_PARTICLE);
-  }
-
-  for (int u = 0; u < 13; u++) {
-    YT6[u] = YAT6[u] * YAT6[u] + YBT6[u] * YBT6[u];
-    Y6 += YT6[u];
+  for (int i = 0; i < 13; i++) {
+    double norm = pow(abs(Y_cum[i]), 2.0);
+    Y6 += norm;
   }
 
   return sqrt(4.0 * PI * Y6 / 13.0);
@@ -511,87 +559,27 @@ double CalculateQ6() {
 
 double CalculateQ6_local() {
   int Nb = Maxlocal;
-  double cita, fai, Y6 = 0.0;
-  double YA6[13], YB6[13], YAT6[13], YBT6[13],
-      YT6[13];  // Y6[-6]到Y6[6]变为Y6[0]到Y6[12], Y6=YA6+YB6*i ,即y=a+bi;
+  double Y6 = 0.0;
+  complex<double> Y_cum[13];  // cumulative
 
   for (int i = 0; i < NUM_PARTICLE; i++) {
-    for (int q = 0; q < 13; q++) {
-      YA6[q] = YB6[q] = YAT6[q] = YBT6[q] = YT6[q] = 0.0;
-    }
+    for (int q = 0; q < 13; q++) Y_cum[q] = complex<double>(0, 0);
 
     for (int j = 0; j < Maxlocal; j++) {
       int m = neigh_id[i][j];
       Vector<3> vtemp = pair_dv[i][m];
 
-      cita = acos(vtemp[2] / vtemp.Norm());
-      double tmp1 = cos(cita);
-      double tmp2 = sin(cita);
-      fai = atan2(vtemp[1], vtemp[0]);
+      double theta = acos(vtemp[2] / vtemp.Norm());
+      double phi = atan2(vtemp[1], vtemp[0]);
 
-      YA6[0] = cos(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-      YB6[0] = -sin(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-      YA6[1] = 3 * cos(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YB6[1] = -3 * sin(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YA6[2] = 3 * cos(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-               sqrt(91 / PI / 2) / 32;
-      YB6[2] = -3 * sin(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-               sqrt(91 / PI / 2) / 32;
-      YA6[3] = cos(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YB6[3] = -sin(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YA6[4] = cos(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YB6[4] = -sin(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YA6[5] = cos(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / PI / 2) / 16;
-      YB6[5] = -sin(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / PI / 2) / 16;
-      YA6[6] =
-          (231 * pow(tmp1, 6) - 315 * pow(tmp1, 4) + 105 * pow(tmp1, 2) - 5) *
-          sqrt(13 / PI) / 32;
-      YB6[6] = 0;
-      YA6[7] = -cos(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / 2 / PI) / 16;
-      YB6[7] = -sin(fai) * tmp2 *
-               (33 * pow(tmp1, 5) - 30 * pow(tmp1, 3) + 5 * tmp1) *
-               sqrt(273 / 2 / PI) / 16;
-      YA6[8] = cos(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YB6[8] = sin(2 * fai) * pow(tmp2, 2) *
-               (33 * pow(tmp1, 4) - 18 * pow(tmp1, 2) + 1) * sqrt(1365 / PI) /
-               64;
-      YA6[9] = -cos(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YB6[9] = -sin(3 * fai) * pow(tmp2, 3) * (11 * pow(tmp1, 3) - 3 * tmp1) *
-               sqrt(1365 / PI) / 32;
-      YA6[10] = 3 * cos(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-                sqrt(91 / PI / 2) / 32;
-      YB6[10] = 3 * sin(4 * fai) * pow(tmp2, 4) * (11 * pow(tmp1, 2) - 1) *
-                sqrt(91 / PI / 2) / 32;
-      YA6[11] = -3 * cos(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YB6[11] = -3 * sin(5 * fai) * pow(tmp2, 5) * tmp1 * sqrt(1001 / PI) / 32;
-      YA6[12] = cos(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-      YB6[12] = sin(6 * fai) * pow(tmp2, 6) * sqrt(3003 / PI) / 64;
-
-      for (int t = 0; t < 13; t++) {
-        YAT6[t] += YA6[t];
-        YBT6[t] += YB6[t];
+      for (int m = -6; m < 6; m++) {
+        complex<double> y = SphericalHarmonic(theta, phi, 6, m);
+        Y_cum[m + 6] += y;
       }
     }
 
-    for (int u = 0; u < 13; u++)
-      YT6[u] = (YAT6[u] * YAT6[u] + YBT6[u] * YBT6[u]) / pow(Nb, 2.0);
     double temp = 0.0;
-    for (int u = 0; u < 13; u++) temp += YT6[u];
+    for (int u = 0; u < 13; u++) temp += pow(abs(Y_cum[u]) / double(Nb), 2.0);
     Y6 += sqrt(4.0 * PI * temp / 13.0);
   }
 

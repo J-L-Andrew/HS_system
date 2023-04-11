@@ -2,6 +2,7 @@
 #include <istream>
 #include <sstream>
 #include <vector>
+#include <complex>
 
 #include "Cell.h"
 #include "Voxel.h"
@@ -43,6 +44,7 @@ void XYZ_output(string filename);
 
 void Nearest_neighbor();
 double GetCN(int N);
+complex<double> SphericalHarmonic(double theta, double phi, int l, int m);
 double CalculateQ6();
 double CalculateQ6_local();
 double MRD(double r);
