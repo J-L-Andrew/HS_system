@@ -36,10 +36,10 @@ int main() {
   string head = "/mnt/Edisk/andrew/dataset/LS/new/sample";
   string file;
 
-  // ofstream sum("./sum.txt");
-  // sum << "PD\tG\tR^2" << endl;
+  ofstream sum("./sum.txt");
+  sum << "PD\tG\tR^2\tq6\tgz" << endl;
 
-  for (int i = 1320; i <= 1320; ++i) {
+  for (int i = 1; i <= 2700; ++i) {
     double para[3];
     string index;
     stringstream trans;
@@ -50,20 +50,23 @@ int main() {
     string path = head + index;
 
     int flag = read_packing(path + "/final.dat");
-    // int num = read_moduli(path + "/modulus_result.txt");
-    // linearFit(p, num, &para[0]);
+    int num = read_moduli(path + "/modulus_result.txt");
+    linearFit(p, num, &para[0]);
 
     // kd << "k\tb" << endl;
     // kd << para[0] << "\t" << para[1] << endl;
 
     if (flag) {
-      // sum << PD << "\t" << para[0] << "\t" << para[1] << endl;
       BackGroundGrids();
+      Nearest_neighbor();
 
       double Q6 = CalculateQ6_local();
-      cout << Q6 << endl;
-      POV_superball(path + "/config.pov");
-      XYZ_output(path + "/config.xyz");
+      double gz = CalculateMRD();
+
+      sum << PD << "\t" << para[0] << "\t" << para[1] << "\t" << Q6 << "\t"
+          << gz << endl;
+      // POV_superball(path + "/config.pov");
+      // XYZ_output(path + "/config.xyz");
       releasespace();
     }
   }
@@ -278,6 +281,42 @@ void Nearest_neighbor() {
     for (int n = 0; n < Maxlocal; n++) sort_dis(m, n);
   }
 }
+double MRD(double r) {
+  // https://journals.aps.org/prl/supplemental/10.1103/PhysRevLett.113.148001/Suppl.pdf
+  // modified radial distribution (MRD) function
+  double R = particles[0]->r_scale[0];
+
+  double sum = 0.0;
+  for (int i = 0; i < NUM_PARTICLE; i++) {
+    for (int j = 0; j < NUM_PARTICLE; j++) {
+      if (i == j) continue;
+
+      double rij = pair_dis[i][j];
+      sum += Heaviside(rij / (r - R) - 1.0) * Heaviside((r + R) / rij - 1.0);
+    }
+  }
+  sum *= (pow(R, 2.0) / pow(r, 2.0) / NUM_PARTICLE);
+  return sum;
+}
+double CalculateMRD() {
+  ofstream mrd("mrd.txt");
+  double R = particles[0]->r_scale[0];
+
+  double delta_r = 1e-5;
+  double r = 2.0 * delta_r * R + R;
+  double gz = MRD(r);
+  while (delta_r < 1) {
+    delta_r += 0.00126;
+    r = 2.0 * delta_r * R + R;
+    double temp = MRD(r);
+    if (temp > gz) gz = temp;
+
+    mrd << delta_r << "\t" << temp << endl;
+  }
+  mrd.close();
+
+  return gz;
+}
 
 // void Nearest_neighbor() {
 //   int i, j, *ncn;
@@ -378,8 +417,6 @@ double GetCN(int N) {
   return meancn;
 }
 double CalculateQ6() {
-  Nearest_neighbor();
-
   int Nb = Maxlocal;
   double cita, fai, Y6 = 0.0;
   double YA6[13], YB6[13], YAT6[13], YBT6[13],
@@ -473,8 +510,6 @@ double CalculateQ6() {
 }
 
 double CalculateQ6_local() {
-  Nearest_neighbor();
-
   int Nb = Maxlocal;
   double cita, fai, Y6 = 0.0;
   double YA6[13], YB6[13], YAT6[13], YBT6[13],

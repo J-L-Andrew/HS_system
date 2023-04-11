@@ -266,7 +266,11 @@ void PointSegmentDistance3D(const Vector<3>& point, const Vector<3>& segment1,
 double random_double(double m, double n);
 int random_int(int m, int n);
 
+
+
+
 ///符号函数
+int Heaviside(double x);
 int sign(double x);
 /// <summary>
 /// 日志文件的输出系列函数

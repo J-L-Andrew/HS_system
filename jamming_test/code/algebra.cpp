@@ -1204,6 +1204,9 @@ int random_int(int m, int n) {
   e.seed(time(NULL));
   return u(e);
 }
+int Heaviside(double x){
+  return (x > 0) ? 1 : 0;
+}
 int sign(double x) {
   if (x == 0)
     return 0;

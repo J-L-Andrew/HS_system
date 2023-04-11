@@ -41,11 +41,12 @@ void PeriodicCheck(Vector<3> &point);
 void POV_superball(string filename);
 void XYZ_output(string filename);
 
+void Nearest_neighbor();
 double GetCN(int N);
 double CalculateQ6();
 double CalculateQ6_local();
-
-
+double MRD(double r);
+double CalculateMRD();
 
 // ----------------
 // Background grid
